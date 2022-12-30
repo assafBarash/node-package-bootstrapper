@@ -42,20 +42,44 @@ describe('bootstrapper', () => {
     ).toEqual(scripts);
   });
 
-  it('should add dependencies to package.json', () => {
-    const dependencies = ['express'];
-    bootstrapper.bootstrap({ packageJson: { dependencies } });
+  it.each(['dependencies', 'devDependencies'])(
+    'should add %s to package.json',
+    (dependenciesKey) => {
+      const dependencies = ['express'];
+      bootstrapper.bootstrap({
+        packageJson: { [dependenciesKey]: dependencies },
+      });
 
-    expect(
-      Object.keys(
-        testkit.getJsonFile<BootstrapOptions['packageJson']>('package')
-          ?.dependencies || {}
-      )
-    ).toEqual(dependencies);
-  });
+      expect(
+        Object.keys(
+          testkit.getJsonFile<BootstrapOptions['packageJson']>('package')?.[
+            dependenciesKey as keyof BootstrapOptions['packageJson']
+          ] || {}
+        )
+      ).toEqual(dependencies);
+    }
+  );
 
   it('should create .gitignore', () => {
     bootstrapper.bootstrap();
     expect(testkit.hasFile('.gitignore')).toBe(true);
+  });
+
+  it('should create tsconfig.json', () => {
+    const devDependencies = ['typescript'];
+    bootstrapper.bootstrap({
+      packageJson: { devDependencies },
+    });
+
+    expect(testkit.hasFile('tsconfig.json')).toBe(true);
+  });
+
+  it('should create jest.config.js', () => {
+    const devDependencies = ['ts-jest'];
+    bootstrapper.bootstrap({
+      packageJson: { devDependencies },
+    });
+
+    expect(testkit.hasFile('jest.config.js')).toBe(true);
   });
 });

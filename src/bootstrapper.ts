@@ -51,9 +51,9 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     commandsArguments: BootstrapOptions['commandsArguments'] = {}
   ) => {
     const dependencyHandlers = {
-      typescript: (commandFlags: string) =>
-        execSync(`npx tsc --init ${commandFlags}`),
-      'ts-jest': () => execSync('npx ts-jest config:init'),
+      typescript: (commandFlags: string = '') =>
+        execSync(`npx tsc --init ${commandFlags}`, { cwd: appName }),
+      'ts-jest': () => execSync('npx ts-jest config:init', { cwd: appName }),
     };
     Object.entries(dependencyHandlers)
       .filter(([key]) => allDependencies.includes(key))
