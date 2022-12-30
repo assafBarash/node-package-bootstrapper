@@ -7,7 +7,11 @@
     "test": "npx jest",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node build/index.js"
+    "start": "node build/index.js",
+    "predeploy": "npm run test",
+    "deploy": "npx dgc -ea",
+    "postdeploy": "npm version patch",
+    "postversion": "npm publish"
   },
   "author": "",
   "license": "ISC",
