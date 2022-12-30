@@ -18,6 +18,10 @@ export interface IBootstrapper {
 export const Bootstrapper = (appName: string): IBootstrapper => {
   const getDirPath = () => path.join(process.cwd(), appName);
   const packageJsonManager = PackageJsonManager(getDirPath());
+  const execSyncInDir = (
+    command: string,
+    options?: Parameters<typeof execSync>[1]
+  ) => execSync(command, { cwd: getDirPath(), ...options });
 
   const init = () => {
     if (fs.existsSync(getDirPath()))
@@ -25,7 +29,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
 
     fs.mkdirSync(getDirPath());
 
-    execSync('npm init -y', { cwd: appName });
+    execSyncInDir('npm init -y');
   };
 
   const handlePackageJson = (packageJson: BootstrapOptions['packageJson']) => {
@@ -36,13 +40,11 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     }
 
     if (dependencies) {
-      execSync(`npm i --save ${dependencies.join(' ')}`, { cwd: appName });
+      execSyncInDir(`npm i --save ${dependencies.join(' ')}`);
     }
 
     if (devDependencies) {
-      execSync(`npm i --save-dev ${devDependencies.join(' ')}`, {
-        cwd: appName,
-      });
+      execSyncInDir(`npm i --save-dev ${devDependencies.join(' ')}`);
     }
   };
 
@@ -52,8 +54,8 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   ) => {
     const dependencyHandlers = {
       typescript: (commandFlags: string = '') =>
-        execSync(`npx tsc --init ${commandFlags}`, { cwd: appName }),
-      'ts-jest': () => execSync('npx ts-jest config:init', { cwd: appName }),
+        execSyncInDir(`npx tsc --init ${commandFlags}`),
+      'ts-jest': () => execSyncInDir('npx ts-jest config:init'),
     };
     Object.entries(dependencyHandlers)
       .filter(([key]) => allDependencies.includes(key))
