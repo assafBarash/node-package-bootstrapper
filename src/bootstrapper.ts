@@ -105,7 +105,7 @@ const PackageJsonManager = (packageJsonDir: string): IPackageJsonManager => {
   const getPackageJsonPath = () => path.join(packageJsonDir, 'package.json');
 
   const getPackageJson: IPackageJsonManager['getPackageJson'] = () =>
-    JSON.parse(fs.readFileSync(getPackageJsonPath()).toString());
+    require(path.resolve(getPackageJsonPath()));
 
   const writeToPackageJson: IPackageJsonManager['writeToPackageJson'] = (
     data: BootstrapOptions['packageJson']
