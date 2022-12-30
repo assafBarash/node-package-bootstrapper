@@ -53,4 +53,9 @@ describe('bootstrapper', () => {
       )
     ).toEqual(dependencies);
   });
+
+  it('should create .gitignore', () => {
+    bootstrapper.bootstrap();
+    expect(testkit.hasFile('.gitignore')).toBe(true);
+  });
 });

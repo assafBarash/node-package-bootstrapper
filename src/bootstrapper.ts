@@ -62,6 +62,15 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
       });
   };
 
+  const buildGitIgnore = () => {
+    const buildPath = path.join(getDirPath(), '.gitignore');
+    const gitIgnoreContent = fs
+      .readFileSync(path.join(__dirname, '..', '.gitignore'))
+      .toString();
+
+    fs.writeFileSync(buildPath, gitIgnoreContent);
+  };
+
   const bootstrap: IBootstrapper['bootstrap'] = ({
     commandsArguments,
     packageJson = {
@@ -78,6 +87,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
       ],
       commandsArguments
     );
+    buildGitIgnore();
   };
 
   return {
