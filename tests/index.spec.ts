@@ -82,4 +82,16 @@ describe('bootstrapper', () => {
 
     expect(testkit.hasFile('jest.config.js')).toBe(true);
   });
+
+  it('should have create index file with content', () => {
+    const filePath = path.join('src', 'index.ts');
+    const fileContent = '#! /usr/bin/env node';
+    bootstrapper.bootstrap({
+      files: {
+        [filePath]: fileContent,
+      },
+    });
+
+    expect(testkit.getFileContent(filePath)).toBe(fileContent);
+  });
 });

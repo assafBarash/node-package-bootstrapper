@@ -6,6 +6,7 @@ export interface IBootstrapperTestkit {
   cleanup: () => void;
   hasFile: (fileName: string) => boolean;
   getJsonFile: <T extends {} | undefined = {}>(fileName: string) => T;
+  getFileContent: (fileName: string) => string;
 }
 
 export const BootstrapperTestkit = (appName: string): IBootstrapperTestkit => {
@@ -18,10 +19,13 @@ export const BootstrapperTestkit = (appName: string): IBootstrapperTestkit => {
   const hasFile: IBootstrapperTestkit['hasFile'] = (fileName) =>
     fs.existsSync(path.join(getAppDirPath(), fileName));
 
+  const getFileContent: IBootstrapperTestkit['getFileContent'] = (fileName) =>
+    fs.readFileSync(path.join(getAppDirPath(), fileName)).toString();
+
   const getJsonFile: IBootstrapperTestkit['getJsonFile'] = (fileName) =>
     JSON.parse(
       fs.readFileSync(path.join(getAppDirPath(), `${fileName}.json`)).toString()
     );
 
-  return { getAppDirPath, cleanup, hasFile, getJsonFile };
+  return { getAppDirPath, cleanup, hasFile, getJsonFile, getFileContent };
 };

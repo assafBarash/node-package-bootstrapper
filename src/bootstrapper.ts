@@ -2,6 +2,8 @@ import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
+type ExecOptions = Parameters<typeof execSync>[1];
+
 export type BootstrapOptions = Partial<{
   packageJson: Partial<{
     scripts: Record<string, string>;
@@ -9,6 +11,7 @@ export type BootstrapOptions = Partial<{
     devDependencies: string[];
   }>;
   commandsArguments: Record<string, string>;
+  files: Record<string, string>;
 }>;
 
 export interface IBootstrapper {
@@ -18,10 +21,8 @@ export interface IBootstrapper {
 export const Bootstrapper = (appName: string): IBootstrapper => {
   const getDirPath = () => path.join(process.cwd(), appName);
   const packageJsonManager = PackageJsonManager(getDirPath());
-  const execSyncInDir = (
-    command: string,
-    options?: Parameters<typeof execSync>[1]
-  ) => execSync(command, { cwd: getDirPath(), ...options });
+  const execSyncInDir = (command: string, options?: ExecOptions) =>
+    execSync(command, { cwd: getDirPath(), ...options });
 
   const init = () => {
     if (fs.existsSync(getDirPath()))
@@ -73,8 +74,19 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     fs.writeFileSync(buildPath, gitIgnoreContent);
   };
 
+  const buildFiles = (files: BootstrapOptions['files']) =>
+    files &&
+    Object.entries(files).forEach(([filePath, fileContent]) => {
+      const builtFilePath = path.join(getDirPath(), filePath);
+      fs.mkdirSync(path.dirname(builtFilePath), {
+        recursive: true,
+      });
+      fs.writeFileSync(builtFilePath, fileContent);
+    });
+
   const bootstrap: IBootstrapper['bootstrap'] = ({
     commandsArguments,
+    files,
     packageJson = {
       dependencies: [],
       devDependencies: [],
@@ -90,6 +102,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
       commandsArguments
     );
     buildGitIgnore();
+    buildFiles(files);
   };
 
   return {
