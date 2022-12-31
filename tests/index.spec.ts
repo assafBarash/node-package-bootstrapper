@@ -94,4 +94,17 @@ describe('bootstrapper', () => {
 
     expect(testkit.getFileContent(filePath)).toBe(fileContent);
   });
+
+  it('should add params to package.json', () => {
+    const params = {
+      typing: 'build/index',
+    };
+    bootstrapper.bootstrap({
+      packageJson: {
+        params,
+      },
+    });
+
+    expect(testkit.getJsonFile<any>('package')?.typing).toEqual(params.typing);
+  });
 });

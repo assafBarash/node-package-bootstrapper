@@ -9,6 +9,7 @@ export type BootstrapOptions = Partial<{
     scripts: Record<string, string>;
     dependencies: string[];
     devDependencies: string[];
+    params: Record<string, any>;
   }>;
   commandsArguments: Record<string, string>;
   files: Record<string, string>;
@@ -34,10 +35,11 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   };
 
   const handlePackageJson = (packageJson: BootstrapOptions['packageJson']) => {
-    const { scripts, dependencies, devDependencies } = packageJson || {};
+    const { scripts, dependencies, devDependencies, params } =
+      packageJson || {};
 
-    if (scripts) {
-      packageJsonManager.writeToPackageJson({ scripts });
+    if (scripts || params) {
+      packageJsonManager.writeToPackageJson({ scripts, ...params });
     }
 
     if (dependencies) {
