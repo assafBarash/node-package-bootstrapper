@@ -10,7 +10,9 @@
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "sourceMap": true
   },
   "exclude": ["node_modules", "./**/*.js", "tests/**/*.ts"]
 }

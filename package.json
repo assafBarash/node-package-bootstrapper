@@ -3,6 +3,7 @@
   "version": "1.0.6",
   "description": "",
   "main": "build/index.js",
+  "typings": "build/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/assafBarash/node-package-bootstrapper"
