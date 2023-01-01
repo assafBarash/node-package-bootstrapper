@@ -105,7 +105,7 @@ const PackageJsonManager = (packageJsonDir: string): IPackageJsonManager => {
   ) =>
     fs.writeFile(
       getPackageJsonPath(),
-      JSON.stringify({ ...getPackageJson(), ...data })
+      JSON.stringify({ ...getPackageJson(), ...data }, null, 4)
     );
 
   return { getPackageJson, writeToPackageJson };
