@@ -11,8 +11,8 @@ export type BootstrapOptions = Partial<{
     devDependencies: string[];
     params: Record<string, any>;
   }>;
-  commandsArguments: Record<string, string>;
   files: Record<string, string>;
+  postScripts: string[];
 }>;
 
 export interface IBootstrapper {
@@ -53,22 +53,8 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     }
   };
 
-  const buildConfigs = (
-    allDependencies: string[],
-    commandsArguments: BootstrapOptions['commandsArguments'] = {}
-  ) => {
-    const dependencyHandlers = {
-      typescript: (commandFlags: string = '') =>
-        execInDir(`npx tsc --init ${commandFlags}`),
-      'ts-jest': () => execInDir('npx ts-jest config:init'),
-    };
-
-    return Promise.all(
-      Object.entries(dependencyHandlers)
-        .filter(([key]) => allDependencies.includes(key))
-        .map(([key, handler]) => handler(commandsArguments[key]))
-    );
-  };
+  const runPostScripts = (postScripts: BootstrapOptions['postScripts'] = []) =>
+    Promise.all(postScripts?.map((script) => execInDir(script)));
 
   const buildGitIgnore = async () => {
     const buildPath = path.join(getDirPath(), '.gitignore');
@@ -92,7 +78,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     );
 
   const bootstrap: IBootstrapper['bootstrap'] = async ({
-    commandsArguments,
+    postScripts,
     files,
     packageJson = {
       dependencies: [],
@@ -103,13 +89,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     await handlePackageJson(packageJson);
     await buildGitIgnore();
     await buildFiles(files);
-    await buildConfigs(
-      [
-        ...(packageJson.dependencies || []),
-        ...(packageJson.devDependencies || []),
-      ],
-      commandsArguments
-    );
+    await runPostScripts(postScripts);
   };
 
   return {

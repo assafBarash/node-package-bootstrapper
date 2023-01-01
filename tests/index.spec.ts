@@ -44,7 +44,7 @@ describe('bootstrapper', () => {
     ).toEqual(expect.objectContaining(scripts));
   });
 
-  it.each(['dependencies', 'devDependencies'])(
+  it.each(['dependencies', 'devDependencies'] as string[])(
     'should add %s to package.json',
     async (dependenciesKey) => {
       const dependencies = ['express'];
@@ -69,23 +69,32 @@ describe('bootstrapper', () => {
     expect(await testkit.hasFile('.gitignore')).toBe(true);
   });
 
-  it('should create tsconfig.json', async () => {
-    const devDependencies = ['typescript'];
-    await bootstrapper.bootstrap({
-      packageJson: { devDependencies },
-    });
+  type PostScriptsTestParams = [
+    string,
+    { postScripts: string; assertFile: string }
+  ];
+  it.each([
+    [
+      'typescript',
+      { postScripts: 'npx tsc --init', assertFile: 'tsconfig.json' },
+    ],
+    [
+      'ts-jest',
+      { postScripts: 'npx ts-jest config:init', assertFile: 'jest.config.js' },
+    ],
+  ] as PostScriptsTestParams[])(
+    'should handle post scripts for s%',
+    async (dependency, { postScripts, assertFile }) => {
+      const devDependencies = [dependency];
+      await bootstrapper.bootstrap({
+        packageJson: { devDependencies },
+        postScripts: [postScripts],
+      });
 
-    expect(await testkit.hasFile('tsconfig.json')).toBe(true);
-  });
-
-  it('should create jest.config.js', async () => {
-    const devDependencies = ['ts-jest'];
-    await bootstrapper.bootstrap({
-      packageJson: { devDependencies },
-    });
-
-    expect(await testkit.hasFile('jest.config.js')).toBe(true);
-  }, 10000);
+      expect(await testkit.hasFile(assertFile)).toBe(true);
+    },
+    15000
+  );
 
   it('should have create index file with content', async () => {
     const filePath = path.join('src', 'index.ts');
