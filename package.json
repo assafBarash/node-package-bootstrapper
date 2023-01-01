@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "npx jest --runInBand",
-    "prebuild": "rimraf build",
+    "prebuild": "rimraf build && npm run copy-assets",
     "build": "tsc",
     "pretest": "npm run build",
     "prestart": "npm run build",
@@ -18,13 +18,15 @@
     "predeploy": "npm run test",
     "deploy": "npx dgc -ea",
     "postdeploy": "npm version patch",
-    "postversion": "npm publish"
+    "postversion": "npm publish",
+    "copy-assets": "copyfiles --all --up 1 --exclude \"./**/*.{ts,tsx}\" \"./src/**/*\" ./build"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.2.4",
     "@types/node": "^18.11.18",
+    "copyfiles": "^2.4.1",
     "jest": "^29.3.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",

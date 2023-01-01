@@ -15,5 +15,6 @@
     "sourceMap": true,
     "declaration": true
   },
-  "exclude": ["node_modules", "./**/*.js", "tests/**/*.ts"]
+  "exclude": ["node_modules", "./**/*.js", "tests/**/*.ts"],
+  "assets": ["src/templates/*"]
 }
