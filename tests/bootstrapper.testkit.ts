@@ -31,7 +31,6 @@ export const BootstrapperTestkit = (appName: string): IBootstrapperTestkit => {
         await fs.readFile(path.join(getAppDirPath(), `${fileName}.json`))
       ).toString()
     );
-  // require(path.resolve(path.join(getAppDirPath(), `${fileName}.json`)));
 
   return { getAppDirPath, cleanup, hasFile, getJsonFile, getFileContent };
 };

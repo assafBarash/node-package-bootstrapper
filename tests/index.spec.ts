@@ -98,7 +98,7 @@ describe('bootstrapper', () => {
     20000
   );
 
-  it('should have create index file with content', async () => {
+  it('should create index file with content', async () => {
     const filePath = path.join('src', 'index.ts');
     const fileContent = '#! /usr/bin/env node';
     await bootstrapper.bootstrap({

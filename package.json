@@ -10,8 +10,8 @@
   },
   "scripts": {
     "test": "npx jest --runInBand",
-    "prebuild": "rimraf build && npm run copy-assets",
-    "build": "tsc",
+    "prebuild": "npx rimraf build",
+    "build": "tsc && npm run copy-assets",
     "pretest": "npm run build",
     "prestart": "npm run build",
     "start": "node build/index.js",
