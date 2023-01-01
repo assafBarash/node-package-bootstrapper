@@ -35,10 +35,9 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   };
 
   const handlePackageJson = async (
-    packageJson: BootstrapOptions['packageJson']
+    packageJson: BootstrapOptions['packageJson'] = {}
   ) => {
-    const { scripts, dependencies, devDependencies, params } =
-      packageJson || {};
+    const { scripts, dependencies, devDependencies, params } = packageJson;
 
     if (scripts || params) {
       await packageJsonManager.writeToPackageJson({ scripts, ...params });
@@ -58,11 +57,8 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
 
   const buildGitIgnore = async () => {
     const buildPath = path.join(getDirPath(), '.gitignore');
-    const gitIgnoreContent = (
-      await fs.readFile(path.join(__dirname, 'templates', 'gitignore'))
-    ).toString();
-
-    await fs.writeFile(buildPath, gitIgnoreContent);
+    const templatePath = path.join(__dirname, 'templates', 'gitignore');
+    await fs.copyFile(templatePath, buildPath);
   };
 
   const buildFiles = async (files: BootstrapOptions['files']) =>
@@ -80,10 +76,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   const bootstrap: IBootstrapper['bootstrap'] = async ({
     postScripts,
     files,
-    packageJson = {
-      dependencies: [],
-      devDependencies: [],
-    },
+    packageJson,
   } = {}) => {
     await init();
     await handlePackageJson(packageJson);
