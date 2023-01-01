@@ -59,7 +59,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   const buildGitIgnore = async () => {
     const buildPath = path.join(getDirPath(), '.gitignore');
     const gitIgnoreContent = (
-      await fs.readFile(path.join(__dirname, 'templates', '.gitignore'))
+      await fs.readFile(path.join(__dirname, 'templates', 'gitignore'))
     ).toString();
 
     await fs.writeFile(buildPath, gitIgnoreContent);
