@@ -1,12 +1,14 @@
 import path from 'path';
-import fs from 'fs';
+import fs from 'node:fs/promises';
+import fileSystem from 'fs';
+import { pathExists } from '../src/utils';
 
 export interface IBootstrapperTestkit {
   getAppDirPath: () => string;
-  cleanup: () => void;
-  hasFile: (fileName: string) => boolean;
-  getJsonFile: <T extends {} | undefined = {}>(fileName: string) => T;
-  getFileContent: (fileName: string) => string;
+  cleanup: () => Promise<void> | void;
+  hasFile: (fileName: string) => Promise<boolean>;
+  getJsonFile: <T extends {} | undefined = {}>(fileName: string) => Promise<T>;
+  getFileContent: (fileName: string) => Promise<string>;
 }
 
 export const BootstrapperTestkit = (appName: string): IBootstrapperTestkit => {
@@ -14,18 +16,22 @@ export const BootstrapperTestkit = (appName: string): IBootstrapperTestkit => {
     path.join(process.cwd(), appName);
 
   const cleanup: IBootstrapperTestkit['cleanup'] = () =>
-    fs.rmSync(getAppDirPath(), { recursive: true, force: true });
+    fileSystem.rmSync(getAppDirPath(), { recursive: true, force: true });
 
-  const hasFile: IBootstrapperTestkit['hasFile'] = (fileName) =>
-    fs.existsSync(path.join(getAppDirPath(), fileName));
+  const hasFile: IBootstrapperTestkit['hasFile'] = async (fileName) =>
+    pathExists(await path.join(getAppDirPath(), fileName));
 
-  const getFileContent: IBootstrapperTestkit['getFileContent'] = (fileName) =>
-    fs.readFileSync(path.join(getAppDirPath(), fileName)).toString();
+  const getFileContent: IBootstrapperTestkit['getFileContent'] = async (
+    fileName
+  ) => (await fs.readFile(path.join(getAppDirPath(), fileName))).toString();
 
-  const getJsonFile: IBootstrapperTestkit['getJsonFile'] = (fileName) =>
+  const getJsonFile: IBootstrapperTestkit['getJsonFile'] = async (fileName) =>
     JSON.parse(
-      fs.readFileSync(path.join(getAppDirPath(), `${fileName}.json`)).toString()
+      (
+        await fs.readFile(path.join(getAppDirPath(), `${fileName}.json`))
+      ).toString()
     );
+  // require(path.resolve(path.join(getAppDirPath(), `${fileName}.json`)));
 
   return { getAppDirPath, cleanup, hasFile, getJsonFile, getFileContent };
 };

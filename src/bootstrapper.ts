@@ -1,8 +1,8 @@
-import { execSync } from 'child_process';
 import path from 'path';
-import fs from 'fs';
+import { execPromised, pathExists } from './utils';
+import fs from 'node:fs/promises';
 
-type ExecOptions = Parameters<typeof execSync>[1];
+type ExecOptions = Parameters<typeof execPromised>[1];
 
 export type BootstrapOptions = Partial<{
   packageJson: Partial<{
@@ -16,38 +16,40 @@ export type BootstrapOptions = Partial<{
 }>;
 
 export interface IBootstrapper {
-  bootstrap(options?: BootstrapOptions): void;
+  bootstrap(options?: BootstrapOptions): Promise<void>;
 }
 
 export const Bootstrapper = (appName: string): IBootstrapper => {
   const getDirPath = () => path.join(process.cwd(), appName);
   const packageJsonManager = PackageJsonManager(getDirPath());
-  const execSyncInDir = (command: string, options?: ExecOptions) =>
-    execSync(command, { cwd: getDirPath(), ...options });
+  const execInDir = (command: string, options?: ExecOptions) =>
+    execPromised(command, { cwd: getDirPath(), ...options });
 
-  const init = () => {
-    if (fs.existsSync(getDirPath()))
+  const init = async () => {
+    if (await pathExists(getDirPath()))
       throw new Error(`dir name ${appName} already exists`);
 
-    fs.mkdirSync(getDirPath());
+    await fs.mkdir(getDirPath());
 
-    execSyncInDir('npm init -y');
+    await execInDir('npm init -y');
   };
 
-  const handlePackageJson = (packageJson: BootstrapOptions['packageJson']) => {
+  const handlePackageJson = async (
+    packageJson: BootstrapOptions['packageJson']
+  ) => {
     const { scripts, dependencies, devDependencies, params } =
       packageJson || {};
 
     if (scripts || params) {
-      packageJsonManager.writeToPackageJson({ scripts, ...params });
+      await packageJsonManager.writeToPackageJson({ scripts, ...params });
     }
 
     if (dependencies) {
-      execSyncInDir(`npm i --save ${dependencies.join(' ')}`);
+      await execInDir(`npm i --save ${dependencies.join(' ')}`);
     }
 
     if (devDependencies) {
-      execSyncInDir(`npm i --save-dev ${devDependencies.join(' ')}`);
+      await execInDir(`npm i --save-dev ${devDependencies.join(' ')}`);
     }
   };
 
@@ -57,36 +59,39 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
   ) => {
     const dependencyHandlers = {
       typescript: (commandFlags: string = '') =>
-        execSyncInDir(`npx tsc --init ${commandFlags}`),
-      'ts-jest': () => execSyncInDir('npx ts-jest config:init'),
+        execInDir(`npx tsc --init ${commandFlags}`),
+      'ts-jest': () => execInDir('npx ts-jest config:init'),
     };
-    Object.entries(dependencyHandlers)
-      .filter(([key]) => allDependencies.includes(key))
-      .forEach(([key, handler]) => {
-        handler(commandsArguments[key]);
-      });
+
+    return Promise.all(
+      Object.entries(dependencyHandlers)
+        .filter(([key]) => allDependencies.includes(key))
+        .map(([key, handler]) => handler(commandsArguments[key]))
+    );
   };
 
-  const buildGitIgnore = () => {
+  const buildGitIgnore = async () => {
     const buildPath = path.join(getDirPath(), '.gitignore');
-    const gitIgnoreContent = fs
-      .readFileSync(path.join(__dirname, '..', '.gitignore'))
-      .toString();
+    const gitIgnoreContent = (
+      await fs.readFile(path.join(__dirname, '..', '.gitignore'))
+    ).toString();
 
-    fs.writeFileSync(buildPath, gitIgnoreContent);
+    await fs.writeFile(buildPath, gitIgnoreContent);
   };
 
-  const buildFiles = (files: BootstrapOptions['files']) =>
+  const buildFiles = async (files: BootstrapOptions['files']) =>
     files &&
-    Object.entries(files).forEach(([filePath, fileContent]) => {
-      const builtFilePath = path.join(getDirPath(), filePath);
-      fs.mkdirSync(path.dirname(builtFilePath), {
-        recursive: true,
-      });
-      fs.writeFileSync(builtFilePath, fileContent);
-    });
+    Promise.all(
+      Object.entries(files).map(async ([filePath, fileContent]) => {
+        const builtFilePath = path.join(getDirPath(), filePath);
+        await fs.mkdir(path.dirname(builtFilePath), {
+          recursive: true,
+        });
+        await fs.writeFile(builtFilePath, fileContent);
+      })
+    );
 
-  const bootstrap: IBootstrapper['bootstrap'] = ({
+  const bootstrap: IBootstrapper['bootstrap'] = async ({
     commandsArguments,
     files,
     packageJson = {
@@ -94,17 +99,22 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
       devDependencies: [],
     },
   } = {}) => {
-    init();
-    handlePackageJson(packageJson);
-    buildConfigs(
+    await init();
+    // await Promise.all([
+    //   handlePackageJson(packageJson),
+    //   buildGitIgnore(),
+    //   buildFiles(files),
+    // ]);
+    await handlePackageJson(packageJson);
+    await buildGitIgnore();
+    await buildFiles(files);
+    await buildConfigs(
       [
         ...(packageJson.dependencies || []),
         ...(packageJson.devDependencies || []),
       ],
       commandsArguments
     );
-    buildGitIgnore();
-    buildFiles(files);
   };
 
   return {
@@ -114,7 +124,7 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
 
 interface IPackageJsonManager {
   getPackageJson: () => BootstrapOptions['packageJson'];
-  writeToPackageJson: (data: BootstrapOptions['packageJson']) => void;
+  writeToPackageJson: (data: BootstrapOptions['packageJson']) => Promise<void>;
 }
 const PackageJsonManager = (packageJsonDir: string): IPackageJsonManager => {
   const getPackageJsonPath = () => path.join(packageJsonDir, 'package.json');
@@ -125,7 +135,7 @@ const PackageJsonManager = (packageJsonDir: string): IPackageJsonManager => {
   const writeToPackageJson: IPackageJsonManager['writeToPackageJson'] = (
     data: BootstrapOptions['packageJson']
   ) =>
-    fs.writeFileSync(
+    fs.writeFile(
       getPackageJsonPath(),
       JSON.stringify({ ...getPackageJson(), ...data })
     );

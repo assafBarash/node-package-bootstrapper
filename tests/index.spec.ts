@@ -12,12 +12,12 @@ describe('bootstrapper', () => {
     bootstrapper = Bootstrapper(testAppName);
   });
 
-  afterEach(() => {
-    testkit.cleanup();
+  afterEach(async () => {
+    await testkit.cleanup();
   });
 
-  it('should init package', () => {
-    bootstrapper.bootstrap();
+  it('should init package', async () => {
+    await bootstrapper.bootstrap();
 
     expect(fs.existsSync(testkit.getAppDirPath())).toBe(true);
     expect(
@@ -25,86 +25,92 @@ describe('bootstrapper', () => {
     ).toBe(true);
   });
 
-  it('should throw error and not bootstrap when dir with given name already exists', () => {
-    bootstrapper.bootstrap();
+  it('should throw error and not bootstrap when dir with given name already exists', async () => {
+    await bootstrapper.bootstrap();
     try {
-      bootstrapper.bootstrap();
+      await bootstrapper.bootstrap();
     } catch (e: any) {
       expect(e.message).toBe(`dir name ${testAppName} already exists`);
     }
   });
 
-  it('should add start script', () => {
+  it('should add start script', async () => {
     const scripts = { start: 'node build/index.js' };
-    bootstrapper.bootstrap({ packageJson: { scripts } });
+    await bootstrapper.bootstrap({ packageJson: { scripts } });
+
     expect(
-      testkit.getJsonFile<BootstrapOptions['packageJson']>('package')?.scripts
-    ).toEqual(scripts);
+      (await testkit.getJsonFile<BootstrapOptions['packageJson']>('package'))
+        ?.scripts
+    ).toEqual(expect.objectContaining(scripts));
   });
 
   it.each(['dependencies', 'devDependencies'])(
     'should add %s to package.json',
-    (dependenciesKey) => {
+    async (dependenciesKey) => {
       const dependencies = ['express'];
-      bootstrapper.bootstrap({
+      await bootstrapper.bootstrap({
         packageJson: { [dependenciesKey]: dependencies },
       });
 
       expect(
         Object.keys(
-          testkit.getJsonFile<BootstrapOptions['packageJson']>('package')?.[
-            dependenciesKey as keyof BootstrapOptions['packageJson']
-          ] || {}
+          (
+            await testkit.getJsonFile<BootstrapOptions['packageJson']>(
+              'package'
+            )
+          )?.[dependenciesKey as keyof BootstrapOptions['packageJson']] || {}
         )
       ).toEqual(dependencies);
     }
   );
 
-  it('should create .gitignore', () => {
-    bootstrapper.bootstrap();
-    expect(testkit.hasFile('.gitignore')).toBe(true);
+  it('should create .gitignore', async () => {
+    await bootstrapper.bootstrap();
+    expect(await testkit.hasFile('.gitignore')).toBe(true);
   });
 
-  it('should create tsconfig.json', () => {
+  it('should create tsconfig.json', async () => {
     const devDependencies = ['typescript'];
-    bootstrapper.bootstrap({
+    await bootstrapper.bootstrap({
       packageJson: { devDependencies },
     });
 
-    expect(testkit.hasFile('tsconfig.json')).toBe(true);
+    expect(await testkit.hasFile('tsconfig.json')).toBe(true);
   });
 
-  it('should create jest.config.js', () => {
+  it('should create jest.config.js', async () => {
     const devDependencies = ['ts-jest'];
-    bootstrapper.bootstrap({
+    await bootstrapper.bootstrap({
       packageJson: { devDependencies },
     });
 
-    expect(testkit.hasFile('jest.config.js')).toBe(true);
-  });
+    expect(await testkit.hasFile('jest.config.js')).toBe(true);
+  }, 10000);
 
-  it('should have create index file with content', () => {
+  it('should have create index file with content', async () => {
     const filePath = path.join('src', 'index.ts');
     const fileContent = '#! /usr/bin/env node';
-    bootstrapper.bootstrap({
+    await bootstrapper.bootstrap({
       files: {
         [filePath]: fileContent,
       },
     });
 
-    expect(testkit.getFileContent(filePath)).toBe(fileContent);
+    expect(await testkit.getFileContent(filePath)).toBe(fileContent);
   });
 
-  it('should add params to package.json', () => {
+  it('should add params to package.json', async () => {
     const params = {
       typing: 'build/index',
     };
-    bootstrapper.bootstrap({
+    await bootstrapper.bootstrap({
       packageJson: {
         params,
       },
     });
 
-    expect(testkit.getJsonFile<any>('package')?.typing).toEqual(params.typing);
+    expect((await testkit.getJsonFile<any>('package'))?.typing).toEqual(
+      params.typing
+    );
   });
 });

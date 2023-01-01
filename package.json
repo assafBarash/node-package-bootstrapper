@@ -9,8 +9,9 @@
     "url": "https://github.com/assafBarash/node-package-bootstrapper"
   },
   "scripts": {
-    "test": "npx jest",
+    "test": "npx jest --runInBand",
     "build": "tsc",
+    "pretest": "npm run build",
     "prestart": "npm run build",
     "start": "node build/index.js",
     "predeploy": "npm run test",
