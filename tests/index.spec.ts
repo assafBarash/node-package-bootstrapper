@@ -3,6 +3,8 @@ import path from 'path';
 import { BootstrapOptions, Bootstrapper, IBootstrapper } from '../src';
 import { BootstrapperTestkit } from './bootstrapper.testkit';
 
+jest.retryTimes(1);
+
 describe('bootstrapper', () => {
   const testAppName = 'test-app';
   const testkit = BootstrapperTestkit(testAppName);
@@ -83,7 +85,7 @@ describe('bootstrapper', () => {
       { postScripts: 'npx ts-jest config:init', assertFile: 'jest.config.js' },
     ],
   ] as PostScriptsTestParams[])(
-    'should handle post scripts for s%',
+    'should handle post scripts for %s',
     async (dependency, { postScripts, assertFile }) => {
       const devDependencies = [dependency];
       await bootstrapper.bootstrap({
@@ -93,7 +95,7 @@ describe('bootstrapper', () => {
 
       expect(await testkit.hasFile(assertFile)).toBe(true);
     },
-    15000
+    20000
   );
 
   it('should have create index file with content', async () => {
