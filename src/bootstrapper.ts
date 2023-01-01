@@ -100,11 +100,6 @@ export const Bootstrapper = (appName: string): IBootstrapper => {
     },
   } = {}) => {
     await init();
-    // await Promise.all([
-    //   handlePackageJson(packageJson),
-    //   buildGitIgnore(),
-    //   buildFiles(files),
-    // ]);
     await handlePackageJson(packageJson);
     await buildGitIgnore();
     await buildFiles(files);
